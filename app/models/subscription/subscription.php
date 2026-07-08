@@ -1,49 +1,65 @@
 <?php
-
-class Subscription{
-    private $conn;
+class Subscription {
+    public $conn;
     private $table_name = "user_subscriptions";
 
-    public $id;
-    public $user_id;
-    public $plan_id;
-    public $status;
-    public $start_date;
-    public $end_date;
+    public function __construct($db) { $this->conn = $db; }
 
-    public function __construct($db){
-        $this->conn = $db;
-    }
-}
-
-public function create(){
-    $query = "INSERT INTO " . $this->table_name . " SET user_id=:user_id, plan_id=:plan_id, status=:status, start_date=:start_date, end_date=:end_date";
-    $stmt = $this->conn->prepare($query);
-
-}
-
-public function read() {
-        $query = "SELECT * FROM " . $this->table_name . " ORDER BY id DESC";
-        
+    // CREATE
+    public function create($user_id, $plan_id, $status, $start_date, $end_date) {
+        $query = "INSERT INTO " . $this->table_name . " (user_id, plan_id, status, start_date, end_date) 
+                  VALUES (:user_id, :plan_id, :status, :start_date, :end_date)";
         $stmt = $this->conn->prepare($query);
-        $this->id = htmlspecialchars(strip_tags($this->id));
-        $stmt->bindParam(":id", $this->id);
+        return $stmt->execute([
+            ':user_id' => $user_id,
+            ':plan_id' => $plan_id,
+            ':status' => htmlspecialchars(strip_tags($status)),
+            ':start_date' => $start_date,
+            ':end_date' => $end_date
+        ]);
+    }
+
+    // READ ALL (Bisa dipakai oleh Admin)
+    public function readAll() {
+        $query = "SELECT * FROM " . $this->table_name . " ORDER BY start_date DESC";
+        $stmt = $this->conn->prepare($query);
         $stmt->execute();
-        
-        return $stmt;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-public function delete(){
-    $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
-
-    stmt = $this->conn->prepare($query);
-
-    $this->id = htmlspecialchars(strip_tags($this->id));
-
-    $stmt->bindParam(":id", $this->id);
-
-    if($stmt->execute()){
-        return true;
+    // READ BY USER (Melihat riwayat langganan satu user spesifik)
+    public function getByUserId($user_id) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE user_id = :user_id ORDER BY end_date DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':user_id' => $user_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    return false;
+
+    // UPDATE STATUS (Misal dari ACTIVE menjadi EXPIRED/CANCELED)
+    public function updateStatus($id, $status) {
+        $query = "UPDATE " . $this->table_name . " SET status = :status WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([
+            ':status' => htmlspecialchars(strip_tags($status)),
+            ':id' => $id
+        ]);
+    }
+
+    // DELETE
+    public function delete($id) {
+        $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([':id' => $id]);
+    }
+
+    // CEK LANGGANAN AKTIF (Dipakai oleh Middleware/Chat Controller)
+    public function checkActiveSubscription($user_id) {
+        $query = "SELECT * FROM " . $this->table_name . " 
+                  WHERE user_id = :user_id AND status = 'ACTIVE' AND end_date > CURRENT_TIMESTAMP 
+                  ORDER BY end_date DESC LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':user_id' => $user_id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }
+?>
