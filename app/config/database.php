@@ -21,7 +21,6 @@ try {
     
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-   // echo("Berhasil terhubung ke Supabase!");
 } catch(\PDOException $e) {
     die("Connection failed: " . $e->getMessage());
 }

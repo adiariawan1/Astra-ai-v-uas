@@ -19,7 +19,7 @@ class Subscription {
         ]);
     }
 
-    // READ ALL (Bisa dipakai oleh Admin)
+    // READ ALL
     public function readAll() {
         $query = "SELECT * FROM " . $this->table_name . " ORDER BY start_date DESC";
         $stmt = $this->conn->prepare($query);
@@ -27,7 +27,7 @@ class Subscription {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // READ BY USER (Melihat riwayat langganan satu user spesifik)
+    // READ BY USER 
     public function getByUserId($user_id) {
         $query = "SELECT * FROM " . $this->table_name . " WHERE user_id = :user_id ORDER BY end_date DESC";
         $stmt = $this->conn->prepare($query);
@@ -35,7 +35,7 @@ class Subscription {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // UPDATE STATUS (Misal dari ACTIVE menjadi EXPIRED/CANCELED)
+    // UPDATE STATUS 
     public function updateStatus($id, $status) {
         $query = "UPDATE " . $this->table_name . " SET status = :status WHERE id = :id";
         $stmt = $this->conn->prepare($query);
@@ -52,11 +52,12 @@ class Subscription {
         return $stmt->execute([':id' => $id]);
     }
 
-    // CEK LANGGANAN AKTIF (Dipakai oleh Middleware/Chat Controller)
     public function checkActiveSubscription($user_id) {
-        $query = "SELECT * FROM " . $this->table_name . " 
-                  WHERE user_id = :user_id AND status = 'ACTIVE' AND end_date > CURRENT_TIMESTAMP 
-                  ORDER BY end_date DESC LIMIT 1";
+        $query = "SELECT us.*, sp.name as plan_name 
+                  FROM " . $this->table_name . " us
+                  LEFT JOIN subscription_plans sp ON us.plan_id = sp.id
+                  WHERE us.user_id = :user_id AND us.status = 'active' AND us.end_date > CURRENT_TIMESTAMP 
+                  ORDER BY us.end_date DESC LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([':user_id' => $user_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);

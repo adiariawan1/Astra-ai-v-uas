@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../models/SubscriptionPlan.php';
-require_once __DIR__ . '/../models/Subscription.php';
+require_once __DIR__ . '/../../models/subscription/SubscriptionPlan.php';
+require_once __DIR__ . '/../../models/subscription/Subscription.php';
 
 class SubscriptionController {
     private $planModel;
@@ -11,17 +11,11 @@ class SubscriptionController {
         $this->userSubModel = new Subscription($db);
     }
 
-    // =======================================================
-    // BAGIAN 1: MANAJEMEN PAKET HARGA (SUBSCRIPTION PLANS)
-    // =======================================================
-
-    // Mengambil semua daftar paket (Biasanya untuk halaman Pricing di Frontend)
     public function getPlans() {
         $plans = $this->planModel->readAll();
         return ["status" => "success", "data" => $plans];
     }
 
-    // Mengambil detail satu paket berdasarkan ID
     public function getPlan($id) {
         if (!$id) return ["status" => "error", "message" => "ID Paket diperlukan."];
 
@@ -33,7 +27,6 @@ class SubscriptionController {
         return ["status" => "error", "message" => "Paket tidak ditemukan."];
     }
 
-    // Membuat paket baru (Biasanya hanya bisa diakses oleh Admin)
     public function createPlan($data) {
         if (empty($data['name']) || !isset($data['price']) || empty($data['duration_days'])) {
             http_response_code(400);
@@ -48,7 +41,6 @@ class SubscriptionController {
         return ["status" => "error", "message" => "Gagal membuat paket langganan."];
     }
 
-    // Mengubah data paket (Admin)
     public function updatePlan($id, $data) {
         if (!$id) return ["status" => "error", "message" => "ID Paket diperlukan."];
 
@@ -58,7 +50,6 @@ class SubscriptionController {
         return ["status" => "error", "message" => "Gagal memperbarui paket."];
     }
 
-    // Menghapus paket (Admin)
     public function deletePlan($id) {
         if (!$id) return ["status" => "error", "message" => "ID Paket diperlukan."];
 
@@ -68,11 +59,7 @@ class SubscriptionController {
         return ["status" => "error", "message" => "Gagal menghapus paket."];
     }
 
-    // =======================================================
-    // BAGIAN 2: MANAJEMEN LANGGANAN USER (USER SUBSCRIPTIONS)
-    // =======================================================
 
-    // Melihat riwayat semua langganan milik satu user
     public function getUserSubscriptions($user_id) {
         if (!$user_id) return ["status" => "error", "message" => "User ID diperlukan."];
 

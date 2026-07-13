@@ -9,5 +9,5 @@ $_SESSION = [];
 session_destroy();
 
 // Kembali ke halaman login
-header("Location: login.php");
+header("Location: http://localhost/back-end-user-service/views/login.php");
 exit;
